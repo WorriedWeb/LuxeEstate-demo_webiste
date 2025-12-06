@@ -1,5 +1,6 @@
+
 import React, { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './services/auth';
 import { Layout } from './components/Layout';
 import { AdminLayout } from './components/AdminLayout';
@@ -33,8 +34,9 @@ const InitialRedirect = () => {
   useEffect(() => {
     if (!initialRedirectComplete) {
       initialRedirectComplete = true;
-      // Force navigation to root on first load to fix "reload goes to subpage" issue
-      navigate('/', { replace: true });
+      // In BrowserRouter, we typically don't need to force redirect to root on load 
+      // unless specifically desired. Removing the forced navigation allows deep linking 
+      // (e.g. refreshing /about stays on /about).
     }
   }, [navigate]);
 
