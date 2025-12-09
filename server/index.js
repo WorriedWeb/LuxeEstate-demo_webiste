@@ -41,10 +41,10 @@ mongoose.connect(MONGODB_URI)
 // Routes
 
 // Health Check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // --- PROPERTIES ---
-app.get('/properties', async (req, res) => {
+app.get('/api/properties', async (req, res) => {
   try {
     const { minPrice, maxPrice, search, status, agentId, sortBy } = req.query;
     let query = {};
@@ -77,7 +77,7 @@ app.get('/properties', async (req, res) => {
   }
 });
 
-app.get('/properties/:slug', async (req, res) => {
+app.get('/api/properties/:slug', async (req, res) => {
   try {
     const property = await Property.findOne({ slug: req.params.slug });
     res.json(property);
@@ -86,7 +86,7 @@ app.get('/properties/:slug', async (req, res) => {
   }
 });
 
-app.post('/properties', async (req, res) => {
+app.post('/api/properties', async (req, res) => {
   try {
     const property = new Property(req.body);
     await property.save();
@@ -96,7 +96,7 @@ app.post('/properties', async (req, res) => {
   }
 });
 
-app.put('/properties/:id', async (req, res) => {
+app.put('/api/properties/:id', async (req, res) => {
   try {
     const property = await Property.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
     res.json(property);
@@ -105,7 +105,7 @@ app.put('/properties/:id', async (req, res) => {
   }
 });
 
-app.delete('/properties/:id', async (req, res) => {
+app.delete('/api/properties/:id', async (req, res) => {
   try {
     await Property.findOneAndDelete({ id: req.params.id });
     res.json({ success: true });
@@ -115,7 +115,7 @@ app.delete('/properties/:id', async (req, res) => {
 });
 
 // --- AGENTS ---
-app.get('/agents', async (req, res) => {
+app.get('/api/agents', async (req, res) => {
   try {
     const { includeInactive } = req.query;
     let query = {};
@@ -129,7 +129,7 @@ app.get('/agents', async (req, res) => {
   }
 });
 
-app.post('/agents', async (req, res) => {
+app.post('/api/agents', async (req, res) => {
   try {
     // In a real app, we might also create a corresponding User entity for login
     const agent = new Agent(req.body);
@@ -140,7 +140,7 @@ app.post('/agents', async (req, res) => {
   }
 });
 
-app.put('/agents/:id', async (req, res) => {
+app.put('/api/agents/:id', async (req, res) => {
     try {
         // Update any field provided in body
         const agent = await Agent.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
@@ -150,7 +150,7 @@ app.put('/agents/:id', async (req, res) => {
     }
 });
 
-app.delete('/agents/:id', async (req, res) => {
+app.delete('/api/agents/:id', async (req, res) => {
     try {
         const agentId = req.params.id;
         
@@ -170,7 +170,7 @@ app.delete('/agents/:id', async (req, res) => {
     }
 });
 
-app.post('/agents/reassign', async (req, res) => {
+app.post('/api/agents/reassign', async (req, res) => {
     try {
         const { oldAgentId, newAgentId } = req.body;
         await Property.updateMany({ agentId: oldAgentId }, { agentId: newAgentId });
@@ -186,7 +186,7 @@ app.post('/agents/reassign', async (req, res) => {
 });
 
 // --- LEADS ---
-app.get('/leads', async (req, res) => {
+app.get('/api/leads', async (req, res) => {
   try {
     // In a real app, we would verify the user token here to filter by agent
     // For this mock-backend, we return all and let frontend filter or basic query params
@@ -197,7 +197,7 @@ app.get('/leads', async (req, res) => {
   }
 });
 
-app.post('/leads', async (req, res) => {
+app.post('/api/leads', async (req, res) => {
   try {
     const lead = new Lead(req.body);
     await lead.save();
@@ -207,7 +207,7 @@ app.post('/leads', async (req, res) => {
   }
 });
 
-app.put('/leads/:id', async (req, res) => {
+app.put('/api/leads/:id', async (req, res) => {
     try {
         // Allow updating status OR assignedAgentId
         const updates = {};
@@ -222,7 +222,7 @@ app.put('/leads/:id', async (req, res) => {
 });
 
 // --- BLOG ---
-app.get('/blog', async (req, res) => {
+app.get('/api/blog', async (req, res) => {
     try {
         const { authorId } = req.query;
         let query = {};
@@ -234,7 +234,7 @@ app.get('/blog', async (req, res) => {
     }
 });
 
-app.get('/blog/:slug', async (req, res) => {
+app.get('/api/blog/:slug', async (req, res) => {
     try {
         const post = await BlogPost.findOne({ slug: req.params.slug });
         res.json(post);
@@ -243,7 +243,7 @@ app.get('/blog/:slug', async (req, res) => {
     }
 });
 
-app.post('/blog', async (req, res) => {
+app.post('/api/blog', async (req, res) => {
     try {
         const post = new BlogPost(req.body);
         await post.save();
@@ -253,7 +253,7 @@ app.post('/blog', async (req, res) => {
     }
 });
 
-app.put('/blog/:id', async (req, res) => {
+app.put('/api/blog/:id', async (req, res) => {
     try {
         const post = await BlogPost.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
         res.json(post);
@@ -262,7 +262,7 @@ app.put('/blog/:id', async (req, res) => {
     }
 });
 
-app.delete('/blog/:id', async (req, res) => {
+app.delete('/api/blog/:id', async (req, res) => {
     try {
         await BlogPost.findOneAndDelete({ id: req.params.id });
         res.json({ success: true });
@@ -272,7 +272,7 @@ app.delete('/blog/:id', async (req, res) => {
 });
 
 // --- USERS ---
-app.get('/users', async (req, res) => {
+app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find();
         res.json(users);
@@ -281,7 +281,7 @@ app.get('/users', async (req, res) => {
     }
 });
 
-app.put('/users/:id/toggle-block', async (req, res) => {
+app.put('/api/users/:id/toggle-block', async (req, res) => {
     try {
         const user = await User.findOne({ id: req.params.id });
         if (!user) return res.status(404).json({ error: "User not found" });
@@ -299,7 +299,7 @@ app.put('/users/:id/toggle-block', async (req, res) => {
 });
 
 // --- DASHBOARD ---
-app.get('/dashboard', async (req, res) => {
+app.get('/api/dashboard', async (req, res) => {
     try {
         const totalProperties = await Property.countDocuments();
         const activeLeads = await Lead.countDocuments({ status: 'NEW' });
