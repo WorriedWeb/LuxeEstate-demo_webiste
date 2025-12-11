@@ -11,15 +11,11 @@ const PORT = process.env.PORT || 5000;
 // Allow CORS
 // Updated to handle credentials correctly by reflecting the request origin
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        // Reflect the request origin to allow credentials (cookies/headers)
-        return callback(null, true);
-    },
+    origin: process.env.FRONTEND_URL || "*",
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
+
 
 app.use(bodyParser.json({ limit: '10mb' }));
 
@@ -342,11 +338,14 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 // Essential for Vercel: Export the app
-export default app;
+// ---- Export for Vercel (Serverless Function) ----
+export default function handler(req, res) {
+  return app(req, res);
+}
 
-// Only listen if running locally
-if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
-    app.listen(PORT, () => {
-        console.log(`Development Server running on http://localhost:${PORT}`);
-    });
+// ---- Local dev server ----
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Local server running on http://localhost:${PORT}`);
+  });
 }
