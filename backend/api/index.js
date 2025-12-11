@@ -4,11 +4,11 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { Property, User, Agent, Lead, BlogPost } from './models.js';
-import serverless from "serverless-http";
 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+    
 
 // Allow CORS
 // Updated to handle credentials correctly by reflecting the request origin
@@ -339,8 +339,10 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-const handler = serverless(app);
-export default handler;
+// ---- Export Express app for Vercel ----
+export default function handler(req, res) {
+  return app(req, res);
+}
 
 // ---- Local dev server (only when running locally) ----
 if (!process.env.VERCEL) {
