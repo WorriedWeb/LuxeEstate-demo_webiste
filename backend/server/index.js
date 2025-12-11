@@ -54,8 +54,8 @@ async function connectDB() {
 
 // Middleware to ensure DB is connected before handling requests
 app.use(async (req, res, next) => {
-    // Skip DB connection for simple health check or if already connected
-    if (req.path === '/api/health' && cached.conn) {
+    // Skip DB connection for simple health check or root path if already connected
+    if ((req.path === '/api/health' || req.path === '/') && cached.conn) {
         return next();
     }
     
@@ -70,11 +70,12 @@ app.use(async (req, res, next) => {
 
 // --- ROUTES ---
 
-// Health Check - Important for debugging Vercel deployment
-app.get('/api', (req, res) => {
-    res.json({ message: "LuxeEstate Backend API is running" });
+// Root route for easy verification
+app.get('/', (req, res) => {
+    res.send("LuxeEstate Backend is Running 🚀");
 });
 
+// Health Check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 
 // --- PROPERTIES ---
