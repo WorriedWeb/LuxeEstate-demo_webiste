@@ -8,10 +8,12 @@ import { Property, User, Agent, Lead, BlogPost } from './models.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allow CORS from configured frontend or allow all for dev
+// Allow CORS
+// In Vercel, the 'origin' should ideally match your Frontend URL
 app.use(cors({
     origin: process.env.FRONTEND_URL || '*', 
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -19,6 +21,8 @@ app.use(bodyParser.json({ limit: '10mb' }));
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/luxeestate';
 
 // --- MongoDB Connection Caching for Serverless ---
+// Vercel serverless functions are stateless, so we cache the connection
+// to reuse it across hot invocations.
 let cached = global.mongoose;
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
@@ -50,6 +54,11 @@ async function connectDB() {
 
 // Middleware to ensure DB is connected before handling requests
 app.use(async (req, res, next) => {
+    // Skip DB connection for simple health check or if already connected
+    if (req.path === '/api/health' && cached.conn) {
+        return next();
+    }
+    
     try {
         await connectDB();
         next();
@@ -61,7 +70,11 @@ app.use(async (req, res, next) => {
 
 // --- ROUTES ---
 
-// Health Check
+// Health Check - Important for debugging Vercel deployment
+app.get('/api', (req, res) => {
+    res.json({ message: "LuxeEstate Backend API is running" });
+});
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 
 // --- PROPERTIES ---
@@ -322,11 +335,10 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-// Export app for Vercel
+// Essential for Vercel: Export the app
 export default app;
 
-// Only listen if running locally (not imported as a module)
-// This check ensures Vercel doesn't try to start a second listener
+// Only listen if running locally
 if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
     app.listen(PORT, () => {
         console.log(`Development Server running on http://localhost:${PORT}`);
