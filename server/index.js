@@ -8,22 +8,27 @@ import { Property, User, Agent, Lead, BlogPost } from './models.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allow CORS
-// Updated to handle credentials correctly by reflecting the request origin
+// --- CORS Configuration ---
+// Allows requests from the defined FRONTEND_URL or falls back to accepting all (for dev/tools)
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "*",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  origin: (origin, callback) => {
+    const allowedOrigin = process.env.FRONTEND_URL;
+    if (!origin || !allowedOrigin || origin === allowedOrigin) {
+      callback(null, true);
+    } else {
+      // Dynamic fallback to allow connections if FRONTEND_URL is not strictly enforced
+      // For strict production security, remove this else block and strictly check origin
+      callback(null, true);
+    }
+  },
+  credentials: true
 }));
-
 
 app.use(bodyParser.json({ limit: '10mb' }));
 
+// --- MongoDB Connection Caching for Serverless ---
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/luxeestate';
 
-// --- MongoDB Connection Caching for Serverless ---
-// Vercel serverless functions are stateless, so we cache the connection
-// to reuse it across hot invocations.
 let cached = global.mongoose;
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
@@ -71,15 +76,15 @@ app.use(async (req, res, next) => {
 
 // --- ROUTES ---
 
-// Root route for easy verification
+// Root route
 app.get('/', (req, res) => {
     res.send("LuxeEstate Backend is Running 🚀");
 });
 
 // Health Check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// --- PROPERTIES ---
+// ---------------- PROPERTIES ----------------
 app.get('/api/properties', async (req, res) => {
   try {
     const { minPrice, maxPrice, search, status, agentId, sortBy } = req.query;
@@ -102,7 +107,7 @@ app.get('/api/properties', async (req, res) => {
       ];
     }
 
-    let sortOptions = { createdAt: -1 }; // Default Newest
+    let sortOptions = { createdAt: -1 };
     if (sortBy === 'price_asc') sortOptions = { price: 1 };
     if (sortBy === 'price_desc') sortOptions = { price: -1 };
 
@@ -150,7 +155,7 @@ app.delete('/api/properties/:id', async (req, res) => {
   }
 });
 
-// --- AGENTS ---
+// ---------------- AGENTS ----------------
 app.get('/api/agents', async (req, res) => {
   try {
     const { includeInactive } = req.query;
@@ -215,7 +220,7 @@ app.post('/api/agents/reassign', async (req, res) => {
     }
 });
 
-// --- LEADS ---
+// ---------------- LEADS ----------------
 app.get('/api/leads', async (req, res) => {
   try {
     const leads = await Lead.find().sort({ createdAt: -1 });
@@ -247,7 +252,7 @@ app.put('/api/leads/:id', async (req, res) => {
     }
 });
 
-// --- BLOG ---
+// ---------------- BLOG ----------------
 app.get('/api/blog', async (req, res) => {
     try {
         const { authorId } = req.query;
@@ -297,7 +302,7 @@ app.delete('/api/blog/:id', async (req, res) => {
     }
 });
 
-// --- USERS ---
+// ---------------- USERS ----------------
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find();
@@ -324,7 +329,7 @@ app.put('/api/users/:id/toggle-block', async (req, res) => {
     }
 });
 
-// --- DASHBOARD ---
+// ---------------- DASHBOARD ----------------
 app.get('/api/dashboard', async (req, res) => {
     try {
         const totalProperties = await Property.countDocuments();
@@ -337,15 +342,14 @@ app.get('/api/dashboard', async (req, res) => {
     }
 });
 
-// Essential for Vercel: Export the app
-// ---- Export for Vercel (Serverless Function) ----
-export default function handler(req, res) {
-  return app(req, res);
-}
+// --- VERCEL EXPORT ---
+// This is crucial for Vercel to turn this Express app into a serverless function
+export default app;
 
-// ---- Local dev server ----
-if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Local server running on http://localhost:${PORT}`);
-  });
+// --- LOCAL SERVER ---
+// Only listen on port if running locally (not in Vercel environment)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Development Server running on http://localhost:${PORT}`);
+    });
 }

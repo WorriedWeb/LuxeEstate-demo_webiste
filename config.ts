@@ -9,7 +9,7 @@ const getEnv = (key: string, defaultValue: string = ''): string => {
 };
 
 const config = {
-  // Backend API URL
+  // Backend API URL - This connects to your Vercel Backend
   API_BASE_URL: getEnv('VITE_API_BASE_URL', 'http://localhost:5000/api'),
   
   // Cloudinary Configuration

@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['ADMIN', 'AGENT', 'USER'], default: 'USER' },
   avatar: String,
   phone: String,
-  password: { type: String, select: false } // In a real app, hash this!
+  password: { type: String, select: false }
 });
 
 const AgentSchema = new mongoose.Schema({
@@ -21,7 +21,7 @@ const AgentSchema = new mongoose.Schema({
   licenseNumber: String,
   listingsCount: { type: Number, default: 0 },
   status: { type: String, enum: ['ACTIVE', 'ON_LEAVE', 'BLOCKED'], default: 'ACTIVE' },
-  password: { type: String } // Added password field
+  password: { type: String }
 });
 
 const PropertySchema = new mongoose.Schema({
@@ -46,7 +46,7 @@ const PropertySchema = new mongoose.Schema({
     yearBuilt: Number
   },
   amenities: [String],
-  images: [String], // Storing Base64 or URLs
+  images: [String],
   agentId: { type: String, required: true },
   status: { type: String, enum: ['FOR_SALE', 'SOLD', 'PENDING', 'FOR_RENT'], default: 'FOR_SALE' },
   type: { type: String, required: true },
@@ -56,7 +56,7 @@ const PropertySchema = new mongoose.Schema({
 const LeadSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   propertyId: String,
-  assignedAgentId: String, // New field for manual assignment
+  assignedAgentId: String,
   name: { type: String, required: true },
   email: String,
   phone: String,
