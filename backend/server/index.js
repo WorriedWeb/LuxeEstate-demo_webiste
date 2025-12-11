@@ -9,9 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Allow CORS
-// In Vercel, the 'origin' should ideally match your Frontend URL
+// Updated to handle credentials correctly by reflecting the request origin
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*', 
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        // Reflect the request origin to allow credentials (cookies/headers)
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
