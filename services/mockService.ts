@@ -1,4 +1,3 @@
-
 import { MOCK_PROPERTIES, MOCK_AGENTS, MOCK_LEADS, MOCK_USERS, MOCK_BLOG_POSTS } from '../constants';
 import { Property, Lead, Agent, User, PropertyStatus, AgentStatus, UserRole, BlogPost } from '../types';
 import config from '../config';
@@ -30,17 +29,21 @@ class MockService {
 
   private async init() {
     // 1. Check if Backend is available
-    try {
-        const res = await fetch(`${API_URL}/health`, { method: 'GET', signal: AbortSignal.timeout(2000) });
-        if (res.ok) {
-            console.log("Connected to Backend API at", API_URL);
-            this.useApi = true;
-            return;
-        }
-    } catch (e) {
-        // Backend offline, falling back to LocalStorage
-        console.log("Backend offline or unreachable. Using LocalStorage fallback.");
-        this.useApi = false;
+    if (API_URL) {
+      try {
+          const res = await fetch(`${API_URL}/health`, { method: 'GET', signal: AbortSignal.timeout(2000) });
+          if (res.ok) {
+              console.log(`Connected to Backend API at: ${API_URL}`);
+              this.useApi = true;
+              return;
+          }
+      } catch (e) {
+          console.warn(`Backend unreachable at ${API_URL}. Falling back to LocalStorage mock mode.`);
+          this.useApi = false;
+      }
+    } else {
+      console.log("No API_URL configured. Using LocalStorage mock mode.");
+      this.useApi = false;
     }
 
     // 2. Initialize Local Storage if API is not used
